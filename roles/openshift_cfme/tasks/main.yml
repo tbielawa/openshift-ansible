@@ -1,2 +1,67 @@
 ---
+- name: Ensure the CFME user exists
+  oc_user:
+    state: present
+    username: cfme
+
+- name: Ensure the CFME namespace exists and the CFME user is the admin
+  oc_project:
+    state: present
+    name: cfme
+    display_name: ManageIQ - CloudForms Management Engine
+    admin: cfme
+
+- name: Ensure the CFME namespace service account is privileged
+  oc_adm_policy_user:
+    namespace: cfme
+    user: 'system:serviceaccount:cfme:default'
+    resource_kind: scc
+    resource_name: privileged
+    state: present
+
+- name: TODO - Create NFS exports for CFME PVs
+  debug:
+    msg: "Not doing anything yet, just a placeholder"
+
+- name: TODO - Evaluate and create CFME PVs
+  debug:
+    msg: "Not doing anything yet, just a placeholder"
+
+- name: Ensure bulk image import limit is tuned
+  yedit:
+    src: /etc/origin/master/master-config.yml
+    key: 'imagePolicyConfig#maxImagesBulkImportedPerRepository'
+    value: 100
+    state: present
+# TODO: Figure out how to link to the right handlers rather than
+# duplicate more restart logic
+#  notify: 'config change - restart master service'
+
+
+# TODO: I think I need to use oc_obj in some way here to create the
+# template files for the PVs
+#
+# The templates in the repository right now aren't actual j2
+# templates. The !spec/nfs/server param needs to be set to the NFS
+# server in your inventory before the templates are evaluated
+- name: Ensure the CFME PV templates are created
+  debug:
+    msg: "Not doing anything yet, just a placeholder"
+  # with_item:
+  #   - miq-pv-db-example.yaml
+  #   - miq-pv-region-example.yaml
+  #   - miq-pv-server-example.yaml
+
+- name: Ensure the CFME PV templates are processed
+  debug:
+    msg: "Not doing anything yet, just a placeholder"
+  # oc_process:
+  #   namespace: cfme
+  #   state: present
+  #   create: True
+  #   template_name: "{{ item }}"
+  # with_item:
+  #   - miq-pv-db-example
+  #   - miq-pv-region-example
+  #   - miq-pv-server-example
 
