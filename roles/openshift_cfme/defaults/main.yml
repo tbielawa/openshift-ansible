@@ -1,2 +1,12 @@
 ---
-
+openshift_cfme_project: cfme
+openshift_cfme_project_description: ManageIQ - CloudForms Management Engine
+# If you change the cfme_project parameter (above) you must change
+# 'cfme' (in cfme_service_account) to that value
+openshift_cfme_service_account: 'system:serviceaccount:cfme:default'
+openshift_cfme_user: cfme
+openshift_cfme_pv_templates:
+  - miq-pv-db
+  - miq-pv-region
+  - miq-pv-server
+openshift_cfme_maxImagesBulkImportedPerRepository: 100

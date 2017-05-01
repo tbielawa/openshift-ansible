@@ -2,19 +2,19 @@
 - name: Ensure the CFME user exists
   oc_user:
     state: present
-    username: cfme
+    username: "{{ openshift_cfme_user }}"
 
 - name: Ensure the CFME namespace exists and the CFME user is the admin
   oc_project:
     state: present
-    name: cfme
-    display_name: ManageIQ - CloudForms Management Engine
-    admin: cfme
+    name: "{{ openshift_cfme_project }}"
+    display_name: "{{ openshift_cfme_project_description }}"
+    admin: "{{ openshift_cfme_user }}"
 
 - name: Ensure the CFME namespace service account is privileged
   oc_adm_policy_user:
-    namespace: cfme
-    user: 'system:serviceaccount:cfme:default'
+    namespace: "{{ openshift_cfme_project }}"
+    user: "{{ openshift_cfme_user }}"
     resource_kind: scc
     resource_name: privileged
     state: present
@@ -31,7 +31,7 @@
   yedit:
     src: /etc/origin/master/master-config.yml
     key: 'imagePolicyConfig#maxImagesBulkImportedPerRepository'
-    value: 100
+    value: "{{ openshift_cfme_maxImagesBulkImportedPerRepository | int() }}"
     state: present
 # TODO: Figure out how to link to the right handlers rather than
 # duplicate more restart logic
@@ -47,21 +47,14 @@
 - name: Ensure the CFME PV templates are created
   debug:
     msg: "Not doing anything yet, just a placeholder"
-  # with_item:
-  #   - miq-pv-db-example.yaml
-  #   - miq-pv-region-example.yaml
-  #   - miq-pv-server-example.yaml
+  # with_items: "{{ openshift_cfme_pv_templates }}"
 
 - name: Ensure the CFME PV templates are processed
   debug:
     msg: "Not doing anything yet, just a placeholder"
   # oc_process:
-  #   namespace: cfme
+  #   namespace: "{{ openshift_cfme_project }}"
   #   state: present
   #   create: True
   #   template_name: "{{ item }}"
-  # with_item:
-  #   - miq-pv-db-example
-  #   - miq-pv-region-example
-  #   - miq-pv-server-example
-
+  # with_item: "{{ openshift_cfme_pv_templates }}"
