@@ -1,13 +1,12 @@
 ---
-- name: Set up CFME
+- name: Setup CFME
   hosts: masters
-  roles:
-  - openshift_cfme
   pre_tasks:
-  - name: What are the groups?
-    debug:
-      var: groups.keys()
+  - name: Create a temporary place to evaluate the PV templates
+    command: mktemp -d /tmp/openshift-ansible-XXXXXXX
+    register: g_cfme_mktemp
+    changed_when: false
 
-  - name: This is the beginning of the CFME plays
-    debug:
-      msg: "FIRST"
+  roles:
+  - role: openshift_cfme
+    template_dir: "{{ hostvars[groups.masters.0].g_cfme_mktemp.stdout }}"

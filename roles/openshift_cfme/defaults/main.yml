@@ -8,3 +8,4 @@ openshift_cfme_pv_templates:
   - miq-pv-region
   - miq-pv-server
 openshift_cfme_maxImagesBulkImportedPerRepository: 100
+openshift_cfme_nfs_server: "{{ groups.nfs.0 }}"

@@ -1,7 +1,15 @@
+# PASSED IN ROLE VARIABLES:
+#
+# - template_dir - A remote temp dir to template the PVs in
+
 ---
 - name: What are the groups?
   debug:
     var: groups.keys()
+
+- name: Where is my template dir
+  debug:
+    var: template_dir
 
 - name: Ensure the CFME user exists
   oc_user:
@@ -42,24 +50,90 @@
 # duplicate more restart logic
 #  notify: 'config change - restart master service'
 
+# This needs to happen on the first master
+- name: Ensure the CFME PV templates are evaluated
+  template:
+    src: "{{ item }}.yaml.j2"
+    dest: "{{ template_dir }}/{{ item }}.yaml"
+  with_items: "{{ openshift_cfme_pv_templates }}"
 
-# TODO: I think I need to use oc_obj in some way here to create the
-# template files for the PVs
-#
-# The templates in the repository right now aren't actual j2
-# templates. The !spec/nfs/server param needs to be set to the NFS
-# server in your inventory before the templates are evaluated
-- name: Ensure the CFME PV templates are created
-  debug:
-    msg: "Not doing anything yet, just a placeholder"
-  # with_items: "{{ openshift_cfme_pv_templates }}"
+######################################################################
+# BEGIN TODO: There has to be a better way to do this. Must refactor.
+- name: Check if the CFME DB PV has been created already
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    state: list
+    kind: pv
+    name: miq-pv01
+  register: miq_pv_01
 
-- name: Ensure the CFME PV templates are processed
-  debug:
-    msg: "Not doing anything yet, just a placeholder"
-  # oc_process:
-  #   namespace: "{{ openshift_cfme_project }}"
-  #   state: present
-  #   create: True
-  #   template_name: "{{ item }}"
-  # with_item: "{{ openshift_cfme_pv_templates }}"
+- name: Ensure CFME DB PV is created
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    kind: pv
+    name: "miq-pv-db"
+    state: present
+    delete_after: True
+    files:
+    - "{{ template_dir }}/miq-pv-db.yaml"
+  when: not miq_pv_01.results.results.0
+
+# ----
+
+- name: Check if the CFME Region PV has been created already
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    state: list
+    kind: pv
+    name: miq-pv02
+  register: miq_pv_02
+
+- name: Ensure CFME Region PV is created
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    kind: pv
+    name: "miq-pv-db"
+    state: present
+    delete_after: True
+    files:
+    - "{{ template_dir }}/miq-pv-db.yaml"
+  when: not miq_pv_02.results.results.0
+
+# ----
+
+- name: Check if the CFME Server PV has been created already
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    state: list
+    kind: pv
+    name: miq-pv03
+  register: miq_pv_03
+
+- name: Ensure CFME Server PV is created
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    kind: pv
+    name: "miq-pv-db"
+    state: present
+    delete_after: True
+    files:
+    - "{{ template_dir }}/miq-pv-db.yaml"
+  when: not miq_pv_03.results.results.0
+
+# END TODO: ^ This needs a refactor
+######################################################################
+
+- name: Ensure the temporary PV templates are erased
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_fileglob:
+    - "{{ template_dir }}/*.yaml"
+  # Don't warn. It only warns if oc_obj already deleted the template
+  # files. This file->absent task just *ensures* they're all gone.
+  warn: False
+
+- name: Ensure the temporary PV template directory is erased
+  file:
+    path: "{{ template_dir }}"
+    state: absent
