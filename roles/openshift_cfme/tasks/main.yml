@@ -1,4 +1,8 @@
 ---
+- name: What are the groups?
+  debug:
+    var: groups.keys()
+
 - name: Ensure the CFME user exists
   oc_user:
     state: present
@@ -14,7 +18,7 @@
 - name: Ensure the CFME namespace service account is privileged
   oc_adm_policy_user:
     namespace: "{{ openshift_cfme_project }}"
-    user: "{{ openshift_cfme_user }}"
+    user: "{{ openshift_cfme_service_account }}"
     resource_kind: scc
     resource_name: privileged
     state: present
@@ -29,10 +33,11 @@
 
 - name: Ensure bulk image import limit is tuned
   yedit:
-    src: /etc/origin/master/master-config.yml
+    src: /etc/origin/master/master-config.yaml
     key: 'imagePolicyConfig#maxImagesBulkImportedPerRepository'
     value: "{{ openshift_cfme_maxImagesBulkImportedPerRepository | int() }}"
     state: present
+    backup: True
 # TODO: Figure out how to link to the right handlers rather than
 # duplicate more restart logic
 #  notify: 'config change - restart master service'

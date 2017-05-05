@@ -1,9 +1,13 @@
 ---
 - name: Set up CFME
-  hosts: oo_all_hosts
+  hosts: masters
   roles:
   - openshift_cfme
   pre_tasks:
-    - name: This is the beginning of the CFME plays
-      debug:
-        msg: "FIRST"
+  - name: What are the groups?
+    debug:
+      var: groups.keys()
+
+  - name: This is the beginning of the CFME plays
+    debug:
+      msg: "FIRST"
