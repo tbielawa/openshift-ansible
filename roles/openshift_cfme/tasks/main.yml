@@ -31,13 +31,15 @@
     resource_name: privileged
     state: present
 
-- name: TODO - Create NFS exports for CFME PVs
-  debug:
-    msg: "Not doing anything yet, just a placeholder"
+- name: Create NFS exports for CFME PVs
+  copy:
+    src: openshift_cfme.exports
+    dest: /etc/exports.d/openshift_cfme.exports
+  register: nfs_exports_updated
 
-- name: TODO - Evaluate and create CFME PVs
-  debug:
-    msg: "Not doing anything yet, just a placeholder"
+- name: Ensure the NFS export table is refreshed if exports were added
+  command: exportfs -ar
+  when: nfs_exports_updated.changed
 
 - name: Ensure bulk image import limit is tuned
   yedit:
@@ -129,9 +131,6 @@
     state: absent
   with_fileglob:
     - "{{ template_dir }}/*.yaml"
-  # Don't warn. It only warns if oc_obj already deleted the template
-  # files. This file->absent task just *ensures* they're all gone.
-  warn: False
 
 - name: Ensure the temporary PV template directory is erased
   file:
