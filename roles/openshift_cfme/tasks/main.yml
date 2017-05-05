@@ -142,10 +142,6 @@
     name: manageiq
   register: miq_app
 
-- name: what my template?
-  debug:
-    var: miq_app
-
 - name: Copy over MIQ app template
   copy:
     src: miq-template.yaml
