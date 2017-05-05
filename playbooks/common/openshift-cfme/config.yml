@@ -1,0 +1,9 @@
+---
+- name: Set up CFME
+  hosts: oo_all_hosts
+  roles:
+  - openshift_cfme
+  pre_tasks:
+    - name: This is the beginning of the CFME plays
+      debug:
+        msg: "FIRST"
