@@ -160,6 +160,19 @@
   when: not miq_app.results.results.0
 
 ######################################################################
+# Let's do this
+- name: Ensure the CFME app is created
+  oc_process:
+    namespace: "{{ openshift_cfme_project }}"
+    template_name: manageiq
+    create: True
+  register: cfme_new_app_process
+  run_once: True
+
+- debug:
+    var: cfme_new_app_process
+
+######################################################################
 
 # Various cleanup steps
 
