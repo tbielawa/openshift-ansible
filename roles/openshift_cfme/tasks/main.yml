@@ -148,7 +148,7 @@
     dest: "{{ template_dir }}/miq-template.yaml"
   when: not miq_app.results.results.0
 
-- name: "Ensure CFME Server PV is created if it doesn't exist"
+- name: "Ensure CFME Server Template is created if it doesn't exist"
   oc_obj:
     namespace: "{{ openshift_cfme_project }}"
     kind: template
@@ -163,14 +163,14 @@
 
 # Various cleanup steps
 
-- name: Ensure the temporary PV templates are erased
+- name: Ensure the temporary PV/App templates are erased
   file:
     path: "{{ item }}"
     state: absent
   with_fileglob:
     - "{{ template_dir }}/*.yaml"
 
-- name: Ensure the temporary PV template directory is erased
+- name: Ensure the temporary PV/app template directory is erased
   file:
     path: "{{ template_dir }}"
     state: absent
