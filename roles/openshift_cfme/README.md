@@ -55,6 +55,11 @@ environment.
 
 ![Basic CFME Deployment](img/CFMEBasicDeployment.png)
 
+**CFME has hard-requirements for memory. CFME will NOT install if your
+  infrastructure does not meet or exceed the requirements given
+  above. Do not run this playbook if you do not have the required
+  memory, you will just waste your time.**
+
 
 ### Other sizing considerations
 
@@ -118,5 +123,3 @@ with the entry point playbook:
 ```
 $ ansible-playbook -v -i <INVENTORY_FILE> playbooks/byo/openshift-cfme/config.yml
 ```
-
-3) Is this actually 3?
