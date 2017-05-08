@@ -36,6 +36,7 @@ project.
   [OpenShift Origin 1.5](https://docs.openshift.com/container-platform/3.5/welcome/index.html)
   or
   [higher](https://docs.openshift.com/container-platform/latest/welcome/index.html)
+  provisioned
 * NFS or other compatible volume provider
 * A cluster-admin user (created by role if required)
 
@@ -85,3 +86,37 @@ Core variables in this role:
 
 Variables you may override have defaults defined in
 [defaults/main.yml](defaults/main.yml).
+
+
+# Usage
+
+This section describes the basic usage of this role. All parameters
+will use their [default values](defaults/main.yml).
+
+## Pre-flight Checks
+
+**IMPORTANT:** As documented above in [the prerequisites](#prerequisites),
+  you **must already** have your OCP cluster up and running.
+
+**Optional:** The ManageIQ pod is fairly large (about 1.7 GB) so to
+save some spin-up time post-deployment, you can begin pre-pulling the
+docker image now to each of your nodes now:
+
+```
+root@node0x # docker pull docker.io/manageiq/manageiq-pods:app-latest
+```
+
+## Getting Started
+
+1) The entry point playbook to install CFME is located in
+[the BYO playbooks](../../playbooks/byo/openshift-cfme/config.yml)
+directory
+
+2) Using your existing `hosts` inventory file, run `ansible-playbook`
+with the entry point playbook:
+
+```
+$ ansible-playbook -v -i <INVENTORY_FILE> playbooks/byo/openshift-cfme/config.yml
+```
+
+3) Is this actually 3?
