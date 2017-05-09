@@ -187,3 +187,11 @@
   file:
     path: "{{ template_dir }}"
     state: absent
+
+######################################################################
+
+- name: Status update
+  debug:
+    msg: >
+      CFME has been deployed. Note that there will be a delay before
+      it is fully initialized.
