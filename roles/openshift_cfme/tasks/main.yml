@@ -51,6 +51,23 @@
   when: master_config_updated.changed
 
 ######################################################################
+- name: Ensure the /exports/ directory is created if necessary
+  file:
+    path: /exports/
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: Ensure the miq-pv0X export directories are created if necessary
+  file:
+    path: "/exports/{{ item }}"
+    state: directory
+    mode: 0775
+    owner: root
+    group: root
+  with_items: "{{ openshift_cfme_pv_exports }}"
+
 - name: Create NFS exports for CFME PVs
   copy:
     src: openshift_cfme.exports

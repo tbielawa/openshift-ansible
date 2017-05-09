@@ -7,6 +7,11 @@ openshift_cfme_project_description: ManageIQ - CloudForms Management Engine
 openshift_cfme_user: cfme
 # Project system account for enabling privileged pods
 openshift_cfme_service_account: "system:serviceaccount:{{ openshift_cfme_project }}:default"
+# All the required exports
+openshift_cfme_pv_exports:
+  - miq-pv01
+  - miq-pv02
+  - miq-pv03
 # List of PV templates
 openshift_cfme_pv_templates:
   - miq-pv-db
