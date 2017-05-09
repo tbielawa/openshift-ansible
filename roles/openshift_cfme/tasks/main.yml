@@ -52,7 +52,8 @@
 - name: TODO Ensure master service is restarted if the config changed
   debug:
     msg: "Not doing anything yet, just a placeholder"
-  when: master_config_updated.changed
+  when:
+    - master_config_updated.changed
 
 ######################################################################
 # NFS
@@ -82,7 +83,8 @@
 
 - name: Ensure the NFS export table is refreshed if exports were added
   command: exportfs -ar
-  when: nfs_exports_updated.changed
+  when:
+    - nfs_exports_updated.changed
 
 ######################################################################
 # TODO: Switch ordering here. We should check if the objects already
@@ -107,16 +109,23 @@
     name: miq-pv01
   register: miq_pv_01
 
-- name: Ensure CFME DB PV is created
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    kind: pv
-    name: "miq-pv-db"
-    state: present
-#    delete_after: True
-    files:
-    - "{{ template_dir }}/miq-pv-db.yaml"
-  when: not miq_pv_01.results.results.0
+- block:
+  - name: Ensure the CFME DB PV template is evaluated
+    template:
+      src: miq-pv-db.yaml.j2
+      dest: "{{ template_dir }}/miq-pv-db.yaml"
+
+  - name: Ensure CFME DB PV is created
+    oc_obj:
+      namespace: "{{ openshift_cfme_project }}"
+      kind: pv
+      name: "miq-pv-db"
+      state: present
+  #    delete_after: True
+      files:
+      - "{{ template_dir }}/miq-pv-db.yaml"
+  when:
+    - not miq_pv_01.results.results.0
 
 # ----
 
@@ -128,16 +137,23 @@
     name: miq-pv02
   register: miq_pv_02
 
-- name: Ensure CFME Region PV is created
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    kind: pv
-    name: "miq-pv-region"
-    state: present
-#    delete_after: True
-    files:
-    - "{{ template_dir }}/miq-pv-region.yaml"
-  when: not miq_pv_02.results.results.0
+- block:
+  - name: Ensure the CFME Region PV template is evaluated
+    template:
+      src: miq-pv-region.yaml.j2
+      dest: "{{ template_dir }}/miq-pv-region.yaml"
+
+  - name: Ensure CFME Region PV is created
+    oc_obj:
+      namespace: "{{ openshift_cfme_project }}"
+      kind: pv
+      name: "miq-pv-region"
+      state: present
+  #    delete_after: True
+      files:
+      - "{{ template_dir }}/miq-pv-region.yaml"
+  when:
+    - not miq_pv_02.results.results.0
 
 # ----
 
@@ -149,16 +165,23 @@
     name: miq-pv03
   register: miq_pv_03
 
-- name: Ensure CFME Server PV is created
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    kind: pv
-    name: "miq-pv-server"
-    state: present
-#    delete_after: True
-    files:
-    - "{{ template_dir }}/miq-pv-server.yaml"
-  when: not miq_pv_03.results.results.0
+- block:
+  - name: Ensure the CFME Server PV template is evaluated
+    template:
+      src: miq-pv-server.yaml.j2
+      dest: "{{ template_dir }}/miq-pv-server.yaml"
+
+  - name: Ensure CFME Server PV is created
+    oc_obj:
+      namespace: "{{ openshift_cfme_project }}"
+      kind: pv
+      name: "miq-pv-server"
+      state: present
+  #    delete_after: True
+      files:
+      - "{{ template_dir }}/miq-pv-server.yaml"
+  when:
+    - not miq_pv_03.results.results.0
 
 # END TODO: ^ This needs a refactor
 ######################################################################
@@ -175,7 +198,8 @@
   copy:
     src: miq-template.yaml
     dest: "{{ template_dir }}/miq-template.yaml"
-  when: not miq_app.results.results.0
+  when:
+    - not miq_app.results.results.0
 
 - name: Ensure CFME Server Template exists
   oc_obj:
@@ -186,7 +210,8 @@
 #    delete_after: True
     files:
     - "{{ template_dir }}/miq-template.yaml"
-  when: not miq_app.results.results.0
+  when:
+    - not miq_app.results.results.0
 
 ######################################################################
 # Let's do this
@@ -198,7 +223,8 @@
     create: True
   register: cfme_new_app_process
   run_once: True
-  when: openshift_cfme_install_app
+  when:
+    - openshift_cfme_install_app
 
 - debug:
     var: cfme_new_app_process
