@@ -1,16 +1,10 @@
+---
 # PASSED IN ROLE VARIABLES:
 #
 # - template_dir - A remote temp dir to template the PVs in
-
----
-- name: What are the groups?
-  debug:
-    var: groups.keys()
-
-- name: Where is my template dir
-  debug:
-    var: template_dir
-
+#
+# TODO: Refactor creation of this temp dir to a JIT approach to
+# improve idempotency.
 ######################################################################
 # Users, projects, and privileges
 
@@ -86,137 +80,60 @@
   when:
     - nfs_exports_updated.changed
 
+
 ######################################################################
-# TODO: Switch ordering here. We should check if the objects already
-# exist *FIRST* and *THEN* we evaluate templates and create them if
-# they don't exist.
+# Create the required CFME PVs. Check out these online docs if you
+# need a refresher on includes looping with items:
+# * http://docs.ansible.com/ansible/playbooks_loops.html#loops-and-includes-in-2-0
+# * http://stackoverflow.com/a/35128533
 #
-# This needs to happen on the first master
+# TODO: Handle the case where a PV template is updated in
+# openshift-ansible and the change needs to be landed on the managed
+# cluster.
 
-- name: Ensure the CFME PV templates are evaluated
-  template:
-    src: "{{ item }}.yaml.j2"
-    dest: "{{ template_dir }}/{{ item }}.yaml"
-  with_items: "{{ openshift_cfme_pv_templates }}"
+- include: create_pvs.yml
+  with_items: "{{ openshift_cfme_pv_data }}"
 
 ######################################################################
-# BEGIN LONG TODO: There has to be a better way to do this. Must refactor.
-- name: Check if the CFME DB PV has been created already
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    state: list
-    kind: pv
-    name: miq-pv01
-  register: miq_pv_01
+# CFME App Template
+#
+# Note, this is different from the create_pvs.yml tasks in that the
+# application template does not require any jinja2 evaluation.
+#
+# TODO: Handle the case where the server template is updated in
+# openshift-ansible and the change needs to be landed on the managed
+# cluster.
 
-- block:
-  - name: Ensure the CFME DB PV template is evaluated
-    template:
-      src: miq-pv-db.yaml.j2
-      dest: "{{ template_dir }}/miq-pv-db.yaml"
-
-  - name: Ensure CFME DB PV is created
-    oc_obj:
-      namespace: "{{ openshift_cfme_project }}"
-      kind: pv
-      name: "miq-pv-db"
-      state: present
-  #    delete_after: True
-      files:
-      - "{{ template_dir }}/miq-pv-db.yaml"
-  when:
-    - not miq_pv_01.results.results.0
-
-# ----
-
-- name: Check if the CFME Region PV has been created already
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    state: list
-    kind: pv
-    name: miq-pv02
-  register: miq_pv_02
-
-- block:
-  - name: Ensure the CFME Region PV template is evaluated
-    template:
-      src: miq-pv-region.yaml.j2
-      dest: "{{ template_dir }}/miq-pv-region.yaml"
-
-  - name: Ensure CFME Region PV is created
-    oc_obj:
-      namespace: "{{ openshift_cfme_project }}"
-      kind: pv
-      name: "miq-pv-region"
-      state: present
-  #    delete_after: True
-      files:
-      - "{{ template_dir }}/miq-pv-region.yaml"
-  when:
-    - not miq_pv_02.results.results.0
-
-# ----
-
-- name: Check if the CFME Server PV has been created already
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    state: list
-    kind: pv
-    name: miq-pv03
-  register: miq_pv_03
-
-- block:
-  - name: Ensure the CFME Server PV template is evaluated
-    template:
-      src: miq-pv-server.yaml.j2
-      dest: "{{ template_dir }}/miq-pv-server.yaml"
-
-  - name: Ensure CFME Server PV is created
-    oc_obj:
-      namespace: "{{ openshift_cfme_project }}"
-      kind: pv
-      name: "miq-pv-server"
-      state: present
-  #    delete_after: True
-      files:
-      - "{{ template_dir }}/miq-pv-server.yaml"
-  when:
-    - not miq_pv_03.results.results.0
-
-# END TODO: ^ This needs a refactor
-######################################################################
-
-- name: Check if the CFME app template has been created already
+- name: Check if the CFME Server template has been created already
   oc_obj:
     namespace: "{{ openshift_cfme_project }}"
     state: list
     kind: template
     name: manageiq
-  register: miq_app
+  register: miq_server_check
 
-- name: Copy over MIQ app template
-  copy:
-    src: miq-template.yaml
-    dest: "{{ template_dir }}/miq-template.yaml"
-  when:
-    - not miq_app.results.results.0
+- block:
+    - name: Copy over CFME Server template
+      copy:
+        src: miq-template.yaml
+        dest: "{{ template_dir }}/miq-template.yaml"
 
-- name: Ensure CFME Server Template exists
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    kind: template
-    name: "manageiq"
-    state: present
-#    delete_after: True
-    files:
-    - "{{ template_dir }}/miq-template.yaml"
+    - name: Ensure CFME Server Template exists
+      oc_obj:
+        namespace: "{{ openshift_cfme_project }}"
+        kind: template
+        name: "manageiq"
+        state: present
+    #    delete_after: True
+        files:
+        - "{{ template_dir }}/miq-template.yaml"
   when:
-    - not miq_app.results.results.0
+    - not miq_server_check.results.results.0
 
 ######################################################################
 # Let's do this
 
-- name: Ensure the CFME app is created
+- name: Ensure the CFME Server is created
   oc_process:
     namespace: "{{ openshift_cfme_project }}"
     template_name: manageiq
