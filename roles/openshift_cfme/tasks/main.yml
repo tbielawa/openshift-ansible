@@ -6,6 +6,8 @@
 # TODO: Refactor creation of this temp dir to a JIT approach to
 # improve idempotency.
 ######################################################################
+
+######################################################################
 # Users, projects, and privileges
 
 - name: Ensure the CFME user exists
@@ -124,7 +126,7 @@
         kind: template
         name: "manageiq"
         state: present
-    #    delete_after: True
+        delete_after: True
         files:
         - "{{ template_dir }}/miq-template.yaml"
   when:
@@ -141,7 +143,10 @@
   register: cfme_new_app_process
   run_once: True
   when:
+    # User said to install CFME in their inventory
     - openshift_cfme_install_app
+    # The server app doesn't exist already
+    - not miq_server_check.results.results.0
 
 - debug:
     var: cfme_new_app_process
@@ -149,17 +154,20 @@
 ######################################################################
 # Various cleanup steps
 
-# - name: Ensure the temporary PV/App templates are erased
-#   file:
-#     path: "{{ item }}"
-#     state: absent
-#   with_fileglob:
-#     - "{{ template_dir }}/*.yaml"
+# TODO: Not sure what to do about this right now. Might be able to
+# just delete it?  This currently warns about "Unable to find
+# '<TEMP_DIR>' in expected paths."
+- name: Ensure the temporary PV/App templates are erased
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_fileglob:
+    - "{{ template_dir }}/*.yaml"
 
-# - name: Ensure the temporary PV/app template directory is erased
-#   file:
-#     path: "{{ template_dir }}"
-#     state: absent
+- name: Ensure the temporary PV/app template directory is erased
+  file:
+    path: "{{ template_dir }}"
+    state: absent
 
 ######################################################################
 
