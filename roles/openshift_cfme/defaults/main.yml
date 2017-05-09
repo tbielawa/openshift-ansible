@@ -16,3 +16,9 @@ openshift_cfme_pv_templates:
 openshift_cfme_maxImagesBulkImportedPerRepository: 100
 # Hostname/IP of the NFS server. Currently defaults to first master
 openshift_cfme_nfs_server: "{{ groups.nfs.0 }}"
+# TODO: Refactor '_install_app' variable. This is just for testing but
+# maybe in the future it should control the entire yes/no for CFME.
+#
+# Whether or not the manageiq app should be initialized ('oc new-app
+# --template=manageiq). If False everything UP TO 'new-app' is ran.
+openshift_cfme_install_app: False

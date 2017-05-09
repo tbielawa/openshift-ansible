@@ -168,6 +168,7 @@
     create: True
   register: cfme_new_app_process
   run_once: True
+  when: openshift_cfme_install_app
 
 - debug:
     var: cfme_new_app_process

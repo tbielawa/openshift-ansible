@@ -77,16 +77,32 @@ environment.
 
 1) You meet/exceed the [cluster sizing](#cluster-sizing) requirements
 1) Your NFS server is on your master host
-1) Your PV backing storage is mounted on `/exports/`
+1) Your PV backing NFS storage volume is mounted on `/exports/`
+
+Required directories that NFS will export to back the PVs:
+
+* `/exports/miq-pv0[123]`
+
+If the required directories are not present at install-time, they will
+be created using the recommended permissions per the
+[upstream documentation](https://github.com/ManageIQ/manageiq-pods#make-persistent-volumes-to-host-the-miq-database-and-application-data):
+
+* UID/GID: `root`/`root`
+* Mode: `0775`
+
+**IMPORTANT:** If you are using a separate volume (`/dev/vdX`) for NFS
+  storage, **ensure** it is mounted on `/exports/` **before** running
+  this role.
+
 
 
 ## Role Variables
 
 Core variables in this role:
 
-| Name             | Default value          | Description   |
-|------------------|------------------------|---------------|
-| `N/A`            | `N/A`                  | `N/A`         |
+| Name                          | Default value | Description   |
+|-------------------------------|---------------|---------------|
+| `openshift_cfme_install_app`  | `False`       | `True`: Install everything and create a new CFME app, `False`: Just install all of the templates and scaffolding |
 
 
 Variables you may override have defaults defined in
