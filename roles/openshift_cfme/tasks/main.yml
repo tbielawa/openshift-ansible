@@ -1,12 +1,4 @@
 ---
-# PASSED IN ROLE VARIABLES:
-#
-# - template_dir - A remote temp dir to template the PVs in
-#
-# TODO: Refactor creation of this temp dir to a JIT approach to
-# improve idempotency.
-######################################################################
-
 ######################################################################
 # Users, projects, and privileges
 
@@ -99,31 +91,22 @@
 # openshift-ansible and the change needs to be landed on the managed
 # cluster.
 
-- name: Check if the CFME Server template has been created already
+# - name: Check if the CFME Server template has been created already
+#   oc_obj:
+#     namespace: "{{ openshift_cfme_project }}"
+#     state: list
+#     kind: template
+#     name: manageiq
+#   register: miq_server_check
+
+- name: Ensure CFME Server Template exists
   oc_obj:
     namespace: "{{ openshift_cfme_project }}"
-    state: list
     kind: template
-    name: manageiq
-  register: miq_server_check
+    name: "manageiq"
+    state: present
+    content: "{{ r_openshift_cfme_miq_template_content }}"
 
-- block:
-    - name: Copy over CFME Server template
-      copy:
-        src: miq-template.yaml
-        dest: "{{ template_dir }}/miq-template.yaml"
-
-    - name: Ensure CFME Server Template exists
-      oc_obj:
-        namespace: "{{ openshift_cfme_project }}"
-        kind: template
-        name: "manageiq"
-        state: present
-        delete_after: True
-        files:
-        - "{{ template_dir }}/miq-template.yaml"
-  when:
-    - not miq_server_check.results.results.0
 
 ######################################################################
 # Let's do this

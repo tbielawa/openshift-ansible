@@ -16,12 +16,8 @@
 
 - name: Setup CFME
   hosts: masters
-  pre_tasks:
-  - name: Create a temporary place to evaluate the PV templates
-    command: mktemp -d /tmp/openshift-ansible-XXXXXXX
-    register: g_cfme_mktemp
-    changed_when: false
-
-  roles:
-  - role: openshift_cfme
-    template_dir: "{{ hostvars[groups.masters.0].g_cfme_mktemp.stdout }}"
+  vars:
+    r_openshift_cfme_miq_template_content: "{{ lookup('file', 'roles/openshift_cfme/files/miq-template.yaml') }}"
+  tasks:
+  - include_role:
+    name: openshift_cfme
