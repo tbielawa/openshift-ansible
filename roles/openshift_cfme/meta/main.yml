@@ -17,3 +17,4 @@ dependencies:
 - role: lib_openshift
 - role: lib_utils
 - role: openshift_common
+- role: openshift_master_facts

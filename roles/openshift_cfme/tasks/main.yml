@@ -41,15 +41,8 @@
     state: present
     backup: True
   register: master_config_updated
-
-# TODO: Figure out how to link to the right handlers rather than
-# duplicate more restart logic
-#  notify: 'config change - restart master service'
-- name: TODO Ensure master service is restarted if the config changed
-  debug:
-    msg: "Not doing anything yet, just a placeholder"
-  when:
-    - master_config_updated.changed
+  notify:
+    - restart master
 
 ######################################################################
 # NFS
@@ -144,7 +137,7 @@
   run_once: True
   when:
     # User said to install CFME in their inventory
-    - openshift_cfme_install_app
+    - openshift_cfme_install_app | bool
     # The server app doesn't exist already
     - not miq_server_check.results.results.0
 
