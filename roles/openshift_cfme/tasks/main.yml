@@ -99,6 +99,11 @@
     name: manageiq
   register: miq_server_check
 
+- name: Copy over CFME Server template
+  copy:
+    src: miq-template.yaml
+    dest: "{{ template_dir }}/miq-template.yaml"
+
 - name: Ensure the server template was read from disk
   debug:
     var=r_openshift_cfme_miq_template_content
@@ -109,8 +114,10 @@
     kind: template
     name: "manageiq"
     state: present
-    content: "{{ r_openshift_cfme_miq_template_content | from_yaml }}"
-
+    #content: "{{ r_openshift_cfme_miq_template_content | from_yaml }}"
+    delete_after: True
+    files:
+      - "{{ template_dir }}/miq-template.yaml"
 
 ######################################################################
 # Let's do this
