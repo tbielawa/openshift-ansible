@@ -91,13 +91,17 @@
 # openshift-ansible and the change needs to be landed on the managed
 # cluster.
 
-# - name: Check if the CFME Server template has been created already
-#   oc_obj:
-#     namespace: "{{ openshift_cfme_project }}"
-#     state: list
-#     kind: template
-#     name: manageiq
-#   register: miq_server_check
+- name: Check if the CFME Server template has been created already
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    state: list
+    kind: template
+    name: manageiq
+  register: miq_server_check
+
+- name: Ensure the server template was read from disk
+  debug:
+    var=r_openshift_cfme_miq_template_content
 
 - name: Ensure CFME Server Template exists
   oc_obj:
@@ -105,7 +109,7 @@
     kind: template
     name: "manageiq"
     state: present
-    content: "{{ r_openshift_cfme_miq_template_content }}"
+    content: "{{ r_openshift_cfme_miq_template_content | from_yaml }}"
 
 
 ######################################################################
@@ -121,8 +125,8 @@
   when:
     # User said to install CFME in their inventory
     - openshift_cfme_install_app | bool
-    # The server app doesn't exist already
-    - not miq_server_check.results.results.0
+    # # The server app doesn't exist already
+    # - not miq_server_check.results.results.0
 
 - debug:
     var: cfme_new_app_process

@@ -18,6 +18,18 @@
   hosts: masters
   vars:
     r_openshift_cfme_miq_template_content: "{{ lookup('file', 'roles/openshift_cfme/files/miq-template.yaml') }}"
+  pre_tasks:
+  - name: Create a temporary place to evaluate the PV templates
+    command: mktemp -d /tmp/openshift-ansible-XXXXXXX
+    register: r_openshift_cfme_mktemp
+    changed_when: false
+  - name: Ensure the server template was read from disk
+    debug:
+      msg="{{ r_openshift_cfme_miq_template_content | from_yaml }}"
+
   tasks:
-  - include_role:
-    name: openshift_cfme
+  - name: Run the CFME Setup Role
+    include_role:
+      name: openshift_cfme
+    vars:
+      template_dir: "{{ r_openshift_cfme_mktemp }}"
