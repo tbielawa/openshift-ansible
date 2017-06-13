@@ -35,4 +35,4 @@ openshift_cfme_nfs_server: "{{ groups.nfs.0 }}"
 # --template=manageiq). If False everything UP TO 'new-app' is ran.
 openshift_cfme_install_app: False
 # Docker image to pull
-openshift_cfme_container_image: "docker.io/manageiq/manageiq-pods:app-latest"
+openshift_cfme_container_image: "docker.io/manageiq/manageiq-pods:app-latest-fine"
