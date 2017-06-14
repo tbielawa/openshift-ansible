@@ -6,6 +6,11 @@
   debug:
     msg: Uninstalling Cloudforms Management Engine - ManageIQ
 
+- name: Ensure the CFME project is removed
+  oc_project:
+    state: absent
+    name: "{{ openshift_cfme_project }}"
+
 - name: Ensure the CFME template is removed
   oc_obj:
     namespace: "{{ openshift_cfme_project }}"
@@ -13,30 +18,18 @@
     kind: template
     name: manageiq
 
-- name: Ensure the CFME SVC is removed
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    state: absent
-    kind: svc
-    selector: app=manageiq,template=manageiq
-
 - name: Ensure the CFME PVs are removed
   oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
     state: absent
+    all_namespaces: True
     kind: pv
     name: "{{ item }}"
-  with_items:
-    - miq-pv01
-    - miq-pv02
-    - miq-pv03
+  with_items: "{{ openshift_cfme_pv_exports }}"
 
-- name: Ensure the CFME StatefulSet is removed
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
+- name: Ensure the CFME user is removed
+  oc_user:
     state: absent
-    kind: statefulset
-    selector: app=manageiq,template=manageiq
+    username: "{{ openshift_cfme_user }}"
 
 - name: Ensure the CFME NFS Exports are removed
   file:
@@ -46,12 +39,5 @@
 
 - name: Ensure the NFS export table is refreshed if exports were removed
   command: exportfs -ar
-  when: nfs_exports_removed.changed
-
-- name: Ensure the CFME project is removed
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    state: absent
-    kind: project
-    name: "{{ openshift_cfme_project }}"
-
+  when:
+    - nfs_exports_removed.changed
