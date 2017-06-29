@@ -1657,10 +1657,10 @@ def set_proxy_facts(facts):
             if 'generate_no_proxy_hosts' in common and safe_get_bool(common['generate_no_proxy_hosts']):
                 if 'no_proxy_internal_hostnames' in common:
                     common['no_proxy'].extend(common['no_proxy_internal_hostnames'].split(','))
-        # We always add local dns domain and ourselves no matter what
-        common['no_proxy'].append('.' + common['dns_domain'])
-        common['no_proxy'].append(common['hostname'])
-        common['no_proxy'] = sort_unique(common['no_proxy'])
+            # We always add local dns domain and ourselves no matter what
+            common['no_proxy'].append('.' + common['dns_domain'])
+            common['no_proxy'].append(common['hostname'])
+            common['no_proxy'] = sort_unique(common['no_proxy'])
         facts['common'] = common
     return facts
 
