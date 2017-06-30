@@ -1672,7 +1672,7 @@ def set_proxy_facts(facts):
                     # and add that list to the overall no_proxy list
                     common['no_proxy'].extend(common['no_proxy_internal_hostnames'].split(','))
 
-        common['no_proxy'] = sort_unique(common['no_proxy'])
+        common['no_proxy'] = ','.join(sort_unique(common['no_proxy']))
     return facts
 
 
