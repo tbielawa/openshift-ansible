@@ -29,7 +29,9 @@
     namespace: "{{ openshift_prometheus_namespace }}"
 #    TODO add annotations when supproted
 #    annotations:
-#      serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"{{item.name}}"}}'
+#      serviceaccounts.openshift.io/oauth-redirectreference.prom: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"prometheus"}}'
+#      serviceaccounts.openshift.io/oauth-redirectreference.alerts: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"alerts"}}'
+
     secrets:
     - prometheus-secrets
   changed_when: no
@@ -38,7 +40,9 @@
 - name: annotate serviceaccount
   command: >
     {{ openshift.common.client_binary }} annotate --overwrite -n {{ openshift_prometheus_namespace }}
-    serviceaccount prometheus serviceaccounts.openshift.io/oauth-redirectreference.primary='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"prometheus"}}'
+    serviceaccount prometheus
+    serviceaccounts.openshift.io/oauth-redirectreference.prom='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"prometheus"}}'
+    serviceaccounts.openshift.io/oauth-redirectreference.alerts='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"alerts"}}'
 
 
 # create clusterrolebinding for prometheus serviceaccount
@@ -68,7 +72,7 @@
     - port: 443
       targetPort: 8443
   with_items:
-    - name: "prometheus"
+    - name: prometheus
 
 - name: Create alerts service
   oc_service:
@@ -86,18 +90,20 @@
     - port: 443
       targetPort: 9443
   with_items:
-    - name: "alerts"
+    - name: alerts
 
 
 # Annotate services with secret name
 # TODO remove this when annotations are supported by oc_service
-- name: annotate services
+- name: annotate prometheus service
   command: >
     {{ openshift.common.client_binary }} annotate --overwrite -n {{ openshift_prometheus_namespace }}
-    service {{ item }} 'service.alpha.openshift.io/serving-cert-secret-name={{ item }}-tls'
-  with_items:
-    - prometheus
-    - alerts
+    service prometheus 'service.alpha.openshift.io/serving-cert-secret-name=prometheus-tls'
+
+- name: annotate alerts service
+  command: >
+    {{ openshift.common.client_binary }} annotate --overwrite -n {{ openshift_prometheus_namespace }}
+    service alerts 'service.alpha.openshift.io/serving-cert-secret-name=prometheus-alerts-tls'
 
 # create prometheus and alerts routes
 - name: create prometheus and alerts routes
@@ -217,7 +223,7 @@
 - name: Set alertmanager configmap
   oc_configmap:
     state: "{{ state }}"
-    name: "alertmanager"
+    name: "prometheus-alerts"
     namespace: "{{ openshift_prometheus_namespace }}"
     from_file:
       alertmanager.yml: "{{ tempdir }}/alertmanager.yml"

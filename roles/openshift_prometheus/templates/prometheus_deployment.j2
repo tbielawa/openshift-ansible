@@ -26,7 +26,7 @@ spec:
 {% endif %}
       containers:
       # Deploy Prometheus behind an oauth proxy
-      - name: prometheus-oauth-proxy
+      - name: prom-proxy
         image: "{{ openshift_prometheus_image_proxy }}"
         imagePullPolicy: IfNotPresent
         resources:
@@ -50,11 +50,12 @@ spec:
         args:
         - -provider=openshift
         - -https-address=:8443
+        - -http-address=
         - -email-domain=*
         - -upstream=http://localhost:9090
         - -client-id=system:serviceaccount:{{ namespace }}:prometheus
-        - '-openshift-sar={"resource": "namespaces", "verb": "get", "name": "{{ namespace }}"}'
-        - '-openshift-delegate-urls={"/": {"resource": "namespaces", "verb": "get", "name": "{{ namespace }}"}}'
+        - '-openshift-sar={"resource": "namespaces", "verb": "get", "resourceName": "{{ namespace }}", "namespace": "{{ namespace }}"}'
+        - '-openshift-delegate-urls={"/": {"resource": "namespaces", "verb": "get", "resourceName": "{{ namespace }}", "namespace": "{{ namespace }}"}}'
         - -tls-cert=/etc/tls/private/tls.crt
         - -tls-key=/etc/tls/private/tls.key
         - -client-secret-file=/var/run/secrets/kubernetes.io/serviceaccount/token
@@ -98,7 +99,7 @@ spec:
           name: prometheus-data
 
       # Deploy alertmanager behind prometheus-alert-buffer behind an oauth proxy
-      - name: alerts-oauth-proxy
+      - name: alerts-proxy
         image: "{{ openshift_prometheus_image_proxy }}"
         imagePullPolicy: IfNotPresent
         resources:
@@ -122,12 +123,12 @@ spec:
         args:
         - -provider=openshift
         - -https-address=:9443
-        - -http-address=:4190
+        - -http-address=
         - -email-domain=*
         - -upstream=http://localhost:9099
         - -client-id=system:serviceaccount:{{ namespace }}:prometheus
-        - '-openshift-sar={"resource": "namespaces", "verb": "get", "name": "{{ namespace }}"}'
-        - '-openshift-delegate-urls={"/": {"resource": "namespaces", "verb": "get", "name": "{{ namespace }}"}}'
+        - '-openshift-sar={"resource": "namespaces", "verb": "get", "resourceName": "{{ namespace }}", "namespace": "{{ namespace }}"}'
+        - '-openshift-delegate-urls={"/": {"resource": "namespaces", "verb": "get", "resourceName": "{{ namespace }}", "namespace": "{{ namespace }}"}}'
         - -tls-cert=/etc/tls/private/tls.crt
         - -tls-key=/etc/tls/private/tls.key
         - -client-secret-file=/var/run/secrets/kubernetes.io/serviceaccount/token
@@ -216,13 +217,13 @@ spec:
       - name: alertmanager-config
         configMap:
           defaultMode: 420
-          name: alertmanager
+          name: prometheus-alerts
       - name: alerts-secrets
         secret:
           secretName: alerts-proxy
       - name: alerts-tls
         secret:
-          secretName: alerts-tls
+          secretName: prometheus-alerts-tls
       - name: alertmanager-data
 {% if openshift_prometheus_storage_type == 'pvc' %}
         persistentVolumeClaim:
