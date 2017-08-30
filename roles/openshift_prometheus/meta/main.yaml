@@ -1,3 +1,4 @@
+---
 galaxy_info:
   author: OpenShift Development <dev@lists.openshift.redhat.com>
   description: Deploy OpenShift prometheus integration for the cluster

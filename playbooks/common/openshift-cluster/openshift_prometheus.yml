@@ -7,4 +7,3 @@
   - openshift_prometheus
   vars:
     openshift_prometheus_state: present
-

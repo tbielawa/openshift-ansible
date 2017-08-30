@@ -5,7 +5,7 @@
   oc_project:
     state: "{{ state }}"
     name: "{{ openshift_prometheus_namespace }}"
-    node_selector: "{{ openshift_prometheus_node_selector | replace(':','=') | replace('{', '') | replace('}', '') | replace(' ', '') | replace(\"u\'\", '') | replace(\"\'\", '') }}"
+    node_selector: "{{ openshift_prometheus_node_selector | oo_selector_to_string_list() }}"
     description: Prometheus
 
 # secrets
@@ -27,13 +27,13 @@
     state: "{{ state }}"
     name: prometheus
     namespace: "{{ openshift_prometheus_namespace }}"
-#    TODO add annotations when supproted
-#    annotations:
-#      serviceaccounts.openshift.io/oauth-redirectreference.prom: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"prometheus"}}'
-#      serviceaccounts.openshift.io/oauth-redirectreference.alerts: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"alerts"}}'
+    #    TODO add annotations when supproted
+    #    annotations:
+    #      serviceaccounts.openshift.io/oauth-redirectreference.prom: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"prometheus"}}'
+    #      serviceaccounts.openshift.io/oauth-redirectreference.alerts: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"alerts"}}'
 
     secrets:
-    - prometheus-secrets
+      - prometheus-secrets
   changed_when: no
 
 # TODO remove this when annotations are supported by oc_serviceaccount
@@ -65,12 +65,12 @@
       app: prometheus
     labels:
       name: "{{ item.name }}"
-#    TODO add annotations when supported
-#    annotations:
-#      service.alpha.openshift.io/serving-cert-secret-name: "{{item.name}}-tls"
+      #    TODO add annotations when supported
+      #    annotations:
+      #      service.alpha.openshift.io/serving-cert-secret-name: "{{item.name}}-tls"
     ports:
-    - port: 443
-      targetPort: 8443
+      - port: 443
+        targetPort: 8443
   with_items:
     - name: prometheus
 
@@ -83,12 +83,12 @@
       app: prometheus
     labels:
       name: "{{ item.name }}"
-#    TODO add annotations when supported
-#    annotations:
-#      service.alpha.openshift.io/serving-cert-secret-name: "{{item.name}}-tls"
+      #    TODO add annotations when supported
+      #    annotations:
+      #      service.alpha.openshift.io/serving-cert-secret-name: "{{item.name}}-tls"
     ports:
-    - port: 443
-      targetPort: 9443
+      - port: 443
+        targetPort: 9443
   with_items:
     - name: alerts
 
@@ -155,7 +155,7 @@
     namespace: "{{ openshift_prometheus_namespace }}"
     kind: deployment
     files:
-    - "{{ tempdir }}/templates/prometheus.yaml"
+      - "{{ tempdir }}/templates/prometheus.yaml"
     delete_after: true
 
 # prometheus configmap
@@ -165,9 +165,9 @@
     src: "{{ openshift_prometheus_additional_rules_file }}"
     dest: "{{ tempdir }}/prometheus.additional.rules"
   when:
-  - openshift_prometheus_additional_rules_file is defined
-  - openshift_prometheus_additional_rules_file is not none
-  - openshift_prometheus_additional_rules_file | trim | length > 0
+    - openshift_prometheus_additional_rules_file is defined
+    - openshift_prometheus_additional_rules_file is not none
+    - openshift_prometheus_additional_rules_file | trim | length > 0
 
 - stat:
     path: "{{ tempdir }}/prometheus.additional.rules"
