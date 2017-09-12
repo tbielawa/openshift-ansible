@@ -1679,7 +1679,7 @@ def set_builddefaults_facts(facts):
         if 'config' in builddefaults:
             if 'admission_plugin_config' not in facts['master']:
                 # Scaffold out the full expected datastructure
-                facts['master']['admission_plugin_config'] = {'BuildDefaults':{'configuration':{'env':{}}}}
+                facts['master']['admission_plugin_config'] = {'BuildDefaults': {'configuration': {'env': {}}}}
             facts['master']['admission_plugin_config'].update(builddefaults['config'])
             delete_empty_keys(facts['master']['admission_plugin_config']['BuildDefaults']['configuration']['env'])
 
