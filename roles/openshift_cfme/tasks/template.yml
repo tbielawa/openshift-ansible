@@ -70,3 +70,67 @@
       - "{{ template_dir }}/miq-template-ext-db.yaml"
     when:
     - miq_ext_db_server_check.results.results == [{}]
+
+# End app template creation.
+######################################################################
+
+######################################################################
+# Begin conditional PV template creations
+
+# Required for the application server
+- name: Check if the CFME App PV template has been created already
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    state: list
+    kind: template
+    name: manageiq-app-pv
+  register: miq_app_pv_check
+
+- name: Copy over CFME App PV template
+  copy:
+    src: miq-pv-server-example.yaml
+    dest: "{{ template_dir }}/"
+  when:
+  - miq_app_pv_check.results.results == [{}]
+
+- name: Ensure CFME App PV Template is created
+  oc_obj:
+    namespace: "{{ openshift_cfme_project }}"
+    name: manageiq-app-pv
+    state: present
+    kind: template
+    files:
+    - "{{ template_dir }}/miq-pv-server-example.yaml"
+  when:
+  - miq_app_pv_check.results.results == [{}]
+
+#---------------------------------------------------------------------
+
+# Required for database if the installation is fully podified
+- when: openshift_cfme_app_template == 'miq-template'
+  block:
+  - name: Check if the CFME DB PV template has been created already
+    oc_obj:
+      namespace: "{{ openshift_cfme_project }}"
+      state: list
+      kind: template
+      name: manageiq-db-pv
+    register: miq_db_pv_check
+
+  - name: Copy over CFME DB PV template
+    copy:
+      src: miq-pv-db-example.yaml
+      dest: "{{ template_dir }}/"
+    when:
+    - miq_db_pv_check.results.results == [{}]
+
+  - name: Ensure CFME DB PV Template is created
+    oc_obj:
+      namespace: "{{ openshift_cfme_project }}"
+      name: manageiq-db-pv
+      state: present
+      kind: template
+      files:
+      - "{{ template_dir }}/miq-pv-db-example.yaml"
+    when:
+    - miq_db_pv_check.results.results == [{}]

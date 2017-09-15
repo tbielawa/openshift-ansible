@@ -17,20 +17,25 @@ openshift_cfme_app_template: miq-template
 
 # If you are using the miq-template-ext-db template then you must add
 # the required database parameters to the
-# openshift_cfme_template_parameters variable. For example:
+# openshift_cfme_template_parameters variable. You only need to
+# provide parameters that differ from the ones in the following
+# example. Any omitted parameter by the user will be default to its
+# default below:
 #
 # openshift_cfme_template_parameters:
-#   DATABASE_USER: root
-#   DATABASE_PASSWORD: @_grrrr8Pa$$.h3r3
-#   DATABASE_IP: 10.1.1.10
+#   DATABASE_USER: 'root'
+#   DATABASE_PASSWORD: ''
+#   DATABASE_IP: '10.1.1.10'
 #   DATABASE_PORT: 5432
-#   DATABASE_NAME: vmdb_production
+#   DATABASE_NAME: 'vmdb_production'
+#
+# See also parameter: __openshift_cfme_default_db_connection_info
 
 ######################################################################
 # STORAGE OPTIONS
 ######################################################################
 # DEFAULT - 'nfs'
-# Allowed options: nfs, external, preconfigured, cloudprovider.
+# Allowed options: nfs, nfs_external, preconfigured, cloudprovider.
 openshift_cfme_storage_class: nfs
 # * nfs - Best used for proof-of-concept installs. Will setup NFS on a
 #   cluster host (defaults to your first master in the inventory file)
@@ -41,8 +46,8 @@ openshift_cfme_storage_class: nfs
 #   available space on an volume/partition if used specifically for
 #   NFS purposes)
 #
-# * external - You are using an external NFS server, such as a netapp
-#   appliance. See the STORAGE - NFS OPTIONS section below for
+# * nfs_external - You are using an external NFS server, such as a
+#   netapp appliance. See the STORAGE - NFS OPTIONS section below for
 #   required information.
 #
 # * preconfigured - This CFME role will do NOTHING to modify storage
@@ -57,39 +62,55 @@ openshift_cfme_storage_class: nfs
 #   Ensure 'openshift_cloudprovider_kind' is defined (aws or gce) and
 #   that the applicable cloudprovider parameters are provided.
 
-######################################################################
+#---------------------------------------------------------------------
 # STORAGE - NFS OPTIONS
-######################################################################
+#---------------------------------------------------------------------
 # [OPTIONAL] - If you are using an EXTERNAL NFS server, such as a
 # netapp appliance, then you must set the hostname here. Leave the
-# value as 'false' if you are not using external NFS
-openshift_cfme_storage_external_nfs_hostname: false
+# value as 'false' if you are not using external NFS.
+openshift_cfme_storage_nfs_external_hostname: false
 # [OPTIONAL] - If you are using external NFS then you must set the base
 # path to the exports location here.
 #
-# Or, change this value if you want to change the default path used
-# for local NFS exports.
-openshift_cfme_storage_external_nfs_base_dir: /exports/
+# Additionally: EXTERNAL NFS REQUIRES that YOU CREATE the nfs exports
+# that will back the application PV and optionally the database
+# pv. Export path definitions, relative to
+# {{ openshift_cfme_storage_nfs_base_dir }}
+#
+# * REQUIRED[ALWAYS]: /miq-app - MIQ Server PV.
+#
+# * REQUIRED[NFS_EXTERNAL]: /miq-db - Podified DB PB
+#
+# LOCAL NFS NOTE:
+#
+# You may may also change this value if you want to change the default
+# path used for local NFS exports.
+openshift_cfme_storage_nfs_base_dir: /exports
 
+#---------------------------------------------------------------------
+# DEFAULT PV SIZES
+# How large to make the MIQ application PV
+openshift_cfme_app_pv_size: 5Gi
+# How large to make the MIQ PostgreSQL PV
+openshift_cfme_db_pv_size: 15Gi
 
 ######################################################################
 # VARIOUS CONSTANTS - DO NOT OVERRIDE THESE UNDER ANY CIRCUMSTANCES
 ######################################################################
-
-######################################################################
 # Misc enumerated values
+#---------------------------------------------------------------------
 # Allowed choices for the storage class parameter
-openshift_cfme_storage_classes:
+__openshift_cfme_storage_classes:
   - nfs
-  - external
+  - nfs_external
   - preconfigured
   - cloudprovider
 # Name of the application templates with object/parameter definitions
-openshift_cfme_app_templates:
+__openshift_cfme_app_templates:
   - miq-template-ext-db
   - miq-template
 # PostgreSQL database connection parameters
-openshift_cfme_db_parameters:
+__openshift_cfme_db_parameters:
   - DATABASE_USER
   - DATABASE_PASSWORD
   - DATABASE_IP
@@ -101,7 +122,7 @@ openshift_cfme_db_parameters:
 # ACCOUNTING
 ######################################################################
 # Service Account SSCs
-openshift_system_account_sccs:
+__openshift_system_account_sccs:
   - name: miq-anyuid
     resource_name: anyuid
   - name: miq-orchestrator
@@ -112,12 +133,24 @@ openshift_system_account_sccs:
     resource_name: miq-httpd
 
 # Service Account Roles
-openshift_cfme_system_account_roles:
+__openshift_cfme_system_account_roles:
   - name: miq-orchestrator
     resource_name: view
   - name: miq-orchestrator
     resource_name: edit
 
+######################################################################
+# DEFAULTS
+######################################################################
+# User only has to provide parameters they need to override, we will
+# do a hash update method with the provided user parameters to create
+# the final connection structure.
+__openshift_cfme_default_db_connection_info:
+  DATABASE_USER: 'root'
+  DATABASE_PASSWORD: ''
+  DATABASE_IP: '10.1.1.10'
+  DATABASE_PORT: 5432
+  DATABASE_NAME: 'vmdb_production'
 
 ######################################################################
 # SCAFFOLDING - These are parameters we pre-seed that a user may or
@@ -131,23 +164,6 @@ openshift_cfme_system_account_roles:
 #
 # openshift_cfme_template_parameters={'APPLICATION_MEM_REQ': '512Mi'}
 openshift_cfme_template_parameters: {}
-
-# # All the required exports
-# openshift_cfme_pv_exports:
-#   - miq-pv01
-#   - miq-pv02
-#   - miq-pv03
-# # PV template files and their created object names
-# openshift_cfme_pv_data:
-#   - pv_name: miq-pv01
-#     pv_template: miq-pv-db.yaml
-#     pv_label: CFME DB PV
-#   - pv_name: miq-pv02
-#     pv_template: miq-pv-region.yaml
-#     pv_label: CFME Region PV
-#   - pv_name: miq-pv03
-#     pv_template: miq-pv-server.yaml
-#     pv_label: CFME Server PV
 
 # TODO: Refactor '_install_app' variable. This is just for testing but
 # maybe in the future it should control the entire yes/no for CFME.

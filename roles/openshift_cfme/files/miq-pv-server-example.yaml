@@ -1,27 +1,38 @@
 apiVersion: v1
-kind: PersistentVolume
+kind: Template
+labels:
+  template: manageiq-app-pv
 metadata:
-  name: "${PV_NAME}"
-spec:
-  capacity:
-    storage: 5Gi
-  accessModes:
-  - ReadWriteOnce
-  nfs:
-    path: "/${BASE_PATH}/${PV_NAME}"
-    server: "${NFS_SERVER}"
-  persistentVolumeReclaimPolicy: Retain
+  name: manageiq-app-pv
+  annotations:
+    description: PV Template for MIQ Server
+    tags: PVS, MIQ
+objects:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: miq-app
+  spec:
+    capacity:
+      storage: "${APP_PV_SIZE}"
+    accessModes:
+    - ReadWriteOnce
+    nfs:
+      path: "${BASE_PATH}/miq-app"
+      server: "${NFS_HOST}"
+    persistentVolumeReclaimPolicy: Retain
 parameters:
+- name: APP_PV_SIZE
+  displayName: PV Size for App
+  required: true
+  description: The size of the MIQ APP pv given in Gi
+  value: 5Gi
 - name: BASE_PATH
-  displayName: BasePath
+  displayName: Exports Directory Base Path
   required: true
   description: The parent directory of your NFS exports
-  value: /exports
-- name: PV_NAME
-  displayName: PVName
-  required: true
-  description: The name of this PV
-- name: NFS_SERVER
-  displayName: NFSServer
+  value: "/exports"
+- name: NFS_HOST
+  displayName: NFS Server Hostname
   required: true
   description: The hostname or IP address of the NFS server
