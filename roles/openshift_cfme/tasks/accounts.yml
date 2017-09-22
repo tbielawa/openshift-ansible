@@ -15,29 +15,6 @@
     name: miq-httpd
   register: miq_httpd_scc_exists
 
-# TODO: Cleanup when conditions
-- name: Copy the miq-httpd SCC to the cluster
-  copy:
-    src: miq-scc-httpd.yaml
-    dest: "{{ template_dir }}"
-  when:
-    - miq_httpd_scc_exists.results.results | length == 1
-    - miq_httpd_scc_exists.results.results[0] == {}
-
-- name: Ensure the CFME miq-httpd SCC exists
-  oc_obj:
-    state: present
-    name: miq-httpd
-    namespace: "{{ openshift_cfme_project }}"
-    kind: scc
-    files:
-      - "{{ template_dir }}/miq-scc-httpd.yaml"
-    delete_after: True
-  run_once: True
-  when:
-    - miq_httpd_scc_exists.results.results | length == 1
-    - miq_httpd_scc_exists.results.results[0] == {}
-
 - name: Ensure the CFME system users exist
   oc_serviceaccount:
     namespace: "{{ openshift_cfme_project }}"

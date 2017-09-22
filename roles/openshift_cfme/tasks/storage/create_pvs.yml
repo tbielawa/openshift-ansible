@@ -44,28 +44,24 @@
 
 - when: miq_app_pv_check.results.results == [{}]
   block:
-    - name: TODO - dont use hard-coded hostname below
-      debug:
-        msg: This should be the oo_nfs host or openshift_cfme_storage_nfs_external_hostname if not false
-
     - name: Ensure the CFME App PV is created
       oc_process:
         namespace: "{{ openshift_cfme_project }}"
         template_name: manageiq-app-pv
         create: True
         params:
-          APP_PV_SIZE: "{{ openshift_cfme_app_pv_size }}"
+          PV_SIZE: "{{ openshift_cfme_app_pv_size }}"
           BASE_PATH: "{{ openshift_cfme_storage_nfs_base_dir }}"
           NFS_HOST: "{{ l_openshift_cfme_nfs_server }}"
 
 - when: openshift_cfme_app_template == 'miq-template' and miq_db_pv_check.results.results == [{}]
   block:
-    - name: Ensure the CFME App PV is created
+    - name: Ensure the CFME DB PV is created
       oc_process:
         namespace: "{{ openshift_cfme_project }}"
         template_name: manageiq-db-pv
         create: True
         params:
-          DB_PV_SIZE: "{{ openshift_cfme_db_pv_size }}"
+          PV_SIZE: "{{ openshift_cfme_db_pv_size }}"
           BASE_PATH: "{{ openshift_cfme_storage_nfs_base_dir }}"
           NFS_HOST: "{{ l_openshift_cfme_nfs_server }}"

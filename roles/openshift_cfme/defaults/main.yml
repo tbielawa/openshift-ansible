@@ -131,6 +131,8 @@ __openshift_system_account_sccs:
     resource_name: privileged
   - name: miq-httpd
     resource_name: miq-httpd
+  - name: miq-httpd
+    resource_name: anyuid
 
 # Service Account Roles
 __openshift_cfme_system_account_roles:

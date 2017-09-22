@@ -14,7 +14,7 @@ objects:
     name: miq-db
   spec:
     capacity:
-      storage: "${DB_PV_SIZE}"
+      storage: "${PV_SIZE}"
     accessModes:
     - ReadWriteOnce
     nfs:
@@ -22,10 +22,10 @@ objects:
       server: "${NFS_HOST}"
     persistentVolumeReclaimPolicy: Retain
 parameters:
-- name: DB_PV_SIZE
-  displayName: PV Size for App
+- name: PV_SIZE
+  displayName: PV Size for DB
   required: true
-  description: The size of the MIQ APP pv given in Gi
+  description: The size of the MIQ DB PV given in Gi
   value: 15Gi
 - name: BASE_PATH
   displayName: Exports Directory Base Path
