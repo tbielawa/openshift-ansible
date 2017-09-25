@@ -7,9 +7,9 @@
 # Note, this is different from the create_pvs.yml tasks in that the
 # application template does not require any jinja2 evaluation.
 #
-# TODO: Handle the case where the server template is updated in
-# openshift-ansible and the change needs to be landed on the managed
-# cluster.
+# TODO: Handle the case where the server or PV templates are updated
+# in openshift-ansible and the change needs to be landed on the
+# managed cluster.
 
 ######################################################################
 # STANDARD PODIFIED DATABASE TEMPLATE

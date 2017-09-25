@@ -1,12 +1,6 @@
 ---
 # This role task file is responsible for user/system account creation,
 # and ensuring correct access is provided as required.
-
-# TODO: This is currently not idempotent, bug report will be filed
-# after this. Currently this task will return 'changed' if it just
-# created a user, updated a user, or doesn't modify a user at
-# all. Seems to be failing some kind of 'does it need updating' test
-# condition and running the replace command regardless.
 - name: Check if the miq-httpd scc exists
   oc_obj:
     namespace: "{{ openshift_cfme_project }}"

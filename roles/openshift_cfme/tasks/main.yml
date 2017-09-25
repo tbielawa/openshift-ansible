@@ -57,7 +57,6 @@
   when:
     - openshift_cfme_storage_class in ['nfs', 'nfs_external']
 
-
 ######################################################################
 # CREATE APP
 - name: Ensure the CFME App is created
@@ -66,54 +65,3 @@
     template_name: manageiq
     create: True
     params: "{{ openshift_cfme_template_parameters }}"
-    #   APPLICATION_IMG_NAME: "{{ openshift_cfme_application_img_name }}"
-    #   POSTGRESQL_IMG_NAME: "{{ openshift_cfme_postgresql_img_name }}"
-    #   MEMCACHED_IMG_NAME: "{{ openshift_cfme_memcached_img_name }}"
-    #   APPLICATION_IMG_TAG: "{{ openshift_cfme_application_img_tag }}"
-    #   POSTGRESQL_IMG_TAG: "{{ openshift_cfme_postgresql_img_tag }}"
-    #   MEMCACHED_IMG_TAG: "{{ openshift_cfme_memcached_img_tag }}"
-
-
-# ######################################################################
-# # Let's do this
-
-# - name: Ensure the CFME Server is created
-# oc_process:
-#   namespace: "{{ openshift_cfme_project }}"
-#   template_name: manageiq
-#   create: True
-#   params:
-#     APPLICATION_IMG_NAME: "{{ openshift_cfme_application_img_name }}"
-#     POSTGRESQL_IMG_NAME: "{{ openshift_cfme_postgresql_img_name }}"
-#     MEMCACHED_IMG_NAME: "{{ openshift_cfme_memcached_img_name }}"
-#     APPLICATION_IMG_TAG: "{{ openshift_cfme_application_img_tag }}"
-#     POSTGRESQL_IMG_TAG: "{{ openshift_cfme_postgresql_img_tag }}"
-#     MEMCACHED_IMG_TAG: "{{ openshift_cfme_memcached_img_tag }}"
-#   register: cfme_new_app_process
-#   run_once: True
-#   when:
-#     # User said to install CFME in their inventory
-#     - openshift_cfme_install_app | bool
-#     # # The server app doesn't exist already
-#     # - not miq_server_check.results.results.0
-
-# - debug:
-#     var: cfme_new_app_process
-
-# ######################################################################
-# # Various cleanup steps
-
-# # TODO: Not sure what to do about this right now. Might be able to
-# # just delete it?  This currently warns about "Unable to find
-# # '<TEMP_DIR>' in expected paths."
-# - name: Ensure the temporary PV/App templates are erased
-#   file:
-#     path: "{{ item }}"
-#     state: absent
-#   with_fileglob:
-#     - "{{ template_dir }}/*.yaml"
-
-# - name: Ensure the temporary PV/app template directory is erased
-#   file:
-#     path: "{{ template_dir }}"
-#     state: absent
