@@ -1,3 +1,0 @@
----
-- name: OpenShift-CFME - Reload NFS Exports
-  command: exportfs -ar

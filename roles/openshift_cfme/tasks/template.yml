@@ -53,23 +53,21 @@
       name: manageiq-ext-db
     register: miq_ext_db_server_check
 
-  - name: Copy over CFME Ext-DB Server template
-    copy:
-      src: miq-template-ext-db.yaml
-      dest: "{{ template_dir }}/"
-    when:
-    - miq_ext_db_server_check.results.results == [{}]
+  - when: miq_ext_db_server_check.results.results == [{}]
+    block:
+    - name: Copy over CFME Ext-DB Server template
+      copy:
+        src: miq-template-ext-db.yaml
+        dest: "{{ template_dir }}/"
 
-  - name: Ensure CFME Ext-DB Server Template is created
-    oc_obj:
-      namespace: "{{ openshift_cfme_project }}"
-      name: manageiq-ext-db
-      state: present
-      kind: template
-      files:
-      - "{{ template_dir }}/miq-template-ext-db.yaml"
-    when:
-    - miq_ext_db_server_check.results.results == [{}]
+    - name: Ensure CFME Ext-DB Server Template is created
+      oc_obj:
+        namespace: "{{ openshift_cfme_project }}"
+        name: manageiq-ext-db
+        state: present
+        kind: template
+        files:
+        - "{{ template_dir }}/miq-template-ext-db.yaml"
 
 # End app template creation.
 ######################################################################
@@ -86,23 +84,21 @@
     name: manageiq-app-pv
   register: miq_app_pv_check
 
-- name: Copy over CFME App PV template
-  copy:
-    src: miq-pv-server-example.yaml
-    dest: "{{ template_dir }}/"
-  when:
-  - miq_app_pv_check.results.results == [{}]
+- when: miq_app_pv_check.results.results == [{}]
+  block:
+  - name: Copy over CFME App PV template
+    copy:
+      src: miq-pv-server-example.yaml
+      dest: "{{ template_dir }}/"
 
-- name: Ensure CFME App PV Template is created
-  oc_obj:
-    namespace: "{{ openshift_cfme_project }}"
-    name: manageiq-app-pv
-    state: present
-    kind: template
-    files:
-    - "{{ template_dir }}/miq-pv-server-example.yaml"
-  when:
-  - miq_app_pv_check.results.results == [{}]
+  - name: Ensure CFME App PV Template is created
+    oc_obj:
+      namespace: "{{ openshift_cfme_project }}"
+      name: manageiq-app-pv
+      state: present
+      kind: template
+      files:
+      - "{{ template_dir }}/miq-pv-server-example.yaml"
 
 #---------------------------------------------------------------------
 
@@ -117,20 +113,18 @@
       name: manageiq-db-pv
     register: miq_db_pv_check
 
-  - name: Copy over CFME DB PV template
-    copy:
-      src: miq-pv-db-example.yaml
-      dest: "{{ template_dir }}/"
-    when:
-    - miq_db_pv_check.results.results == [{}]
+  - when: miq_db_pv_check.results.results == [{}]
+    block:
+    - name: Copy over CFME DB PV template
+      copy:
+        src: miq-pv-db-example.yaml
+        dest: "{{ template_dir }}/"
 
-  - name: Ensure CFME DB PV Template is created
-    oc_obj:
-      namespace: "{{ openshift_cfme_project }}"
-      name: manageiq-db-pv
-      state: present
-      kind: template
-      files:
-      - "{{ template_dir }}/miq-pv-db-example.yaml"
-    when:
-    - miq_db_pv_check.results.results == [{}]
+    - name: Ensure CFME DB PV Template is created
+      oc_obj:
+        namespace: "{{ openshift_cfme_project }}"
+        name: manageiq-db-pv
+        state: present
+        kind: template
+        files:
+        - "{{ template_dir }}/miq-pv-db-example.yaml"

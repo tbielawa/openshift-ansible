@@ -33,7 +33,7 @@
 - name: Ensure the correct CFME exports file exists
   template:
     src: "openshift_cfme-{{ openshift_cfme_app_template }}.exports.j2"
-    dest: "/etc/exports.d/manageiq.exports"
+    dest: "/etc/exports.d/cfme.exports"
   register: cfme_exports_created
 
 - name: Ensure CFME App NFS export directory exists
@@ -60,19 +60,8 @@
     name: nfs-server
     state: started
     enabled: yes
-  register: start_result
 
-- set_fact:
-    nfs_service_status_changed: "{{ start_result | changed }}"
-
-- name: OpenShift-CFME - restart nfs-server
-  systemd:
-    name: nfs-server
-    state: restarted
+- name: OpenShift-CFME Reload NFS Exports
+  command: exportfs -ar
   when:
-    - (nfs_service_status_changed | default(false)) or (cfme_exports_created.changed)
-  notify:
-    - "OpenShift-CFME - Reload NFS Exports"
-
-- name: Flush handlers
-  meta: flush_handlers
+    - cfme_exports_created | changed
