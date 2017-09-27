@@ -1,27 +1,5 @@
 ---
 # Create the required PVs for the App and the DB
-- name: Ensure we save the local NFS server
-  set_fact:
-    l_openshift_cfme_nfs_server: "{{ groups['oo_nfs_to_config'].0 }}"
-  when:
-    - openshift_cfme_storage_class == "nfs"
-
-- name: Ensure we save the external NFS server
-  set_fact:
-    l_openshift_cfme_nfs_server: "{{ openshift_cfme_storage_nfs_external_hostname }}"
-  when:
-    - openshift_cfme_storage_class == "nfs_external"
-
-- name: Failed NFS server detection
-  assert:
-    that:
-      - l_openshift_cfme_nfs_server is defined
-    msg: |
-      "Unable to detect an NFS server. The 'nfs_external'
-      openshift_cfme_storage_class option requires that you set
-      openshift_cfme_storage_nfs_external_hostname. NFS hosts detected
-      for local nfs services: {{ groups['oo_nfs_to_config'] | join(', ') }}"
-
 - name: Check if the CFME App PV has been created
   oc_obj:
     namespace: "{{ openshift_cfme_project }}"
@@ -48,7 +26,7 @@
     params:
       PV_SIZE: "{{ openshift_cfme_app_pv_size }}"
       BASE_PATH: "{{ openshift_cfme_storage_nfs_base_dir }}"
-      NFS_HOST: "{{ l_openshift_cfme_nfs_server }}"
+      NFS_HOST: "{{ openshift_cfme_nfs_server }}"
   when: miq_app_pv_check.results.results == [{}]
 
 - name: Ensure the CFME DB PV is created
@@ -59,7 +37,7 @@
     params:
       PV_SIZE: "{{ openshift_cfme_db_pv_size }}"
       BASE_PATH: "{{ openshift_cfme_storage_nfs_base_dir }}"
-      NFS_HOST: "{{ l_openshift_cfme_nfs_server }}"
+      NFS_HOST: "{{ openshift_cfme_nfs_server }}"
   when:
     - openshift_cfme_app_template == 'miq-template'
     - miq_db_pv_check.results.results == [{}]

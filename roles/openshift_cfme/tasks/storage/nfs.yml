@@ -2,66 +2,112 @@
 # Tasks to statically provision NFS volumes
 # Include if not using dynamic volume provisioning
 
-- name: Note Storage Type - NFS
-  debug:
-    msg: Setting up NFS storage, openshift_cfme_storage_class is 'nfs'
-
-# TODO: I was going to try to apply the openshift_storage_nfs role to
-# handle this, however, that role is not written to be used by
-# itself. Attempting to use it to create CFME exports would just add
-# more hard-coded values to the role. That said, we're doing this here
-# manually for now until some one comes up with a better solution, or
-# the role is made to accept parameters in a more functional way.
-#
-# I can't really even include the openshift_storage_nfs role in here
-# to do basic setup stuff because it would just result in a lot of
-# unwanted exports getting set up for the users.
-
-- name: Ensure the base NFS exports directory exists
-  file:
-    path: "{{ openshift_cfme_storage_nfs_base_dir }}"
-    state: directory
-    mode: 0755
-    owner: root
-    group: root
-
-- name: Ensure exports directory exists
-  file:
-    path: /etc/exports.d/
-    state: directory
-
-- name: Ensure the correct CFME exports file exists
-  template:
-    src: "openshift_cfme-{{ openshift_cfme_app_template }}.exports.j2"
-    dest: "/etc/exports.d/cfme.exports"
-  register: cfme_exports_created
-
-- name: Ensure CFME App NFS export directory exists
-  file:
-    path: "{{ openshift_cfme_storage_nfs_base_dir }}/miq-app"
-    state: directory
-    mode: 0777
-    owner: nfsnobody
-    group: nfsnobody
-
-# Only when using podified DB template
-- name: Ensure CFME DB NFS export directory exists
-  file:
-    path: "{{ openshift_cfme_storage_nfs_base_dir }}/miq-db"
-    state: directory
-    mode: 0777
-    owner: nfsnobody
-    group: nfsnobody
+- name: Ensure we save the local NFS server
+  set_fact:
+    openshift_cfme_nfs_server: "{{ groups['oo_nfs_to_config'].0 }}"
   when:
-    - openshift_cfme_app_template == 'miq-template'
+    - openshift_cfme_storage_class == "nfs"
 
-- name: Enable and start NFS services
-  systemd:
-    name: nfs-server
-    state: started
-    enabled: yes
-
-- name: OpenShift-CFME Reload NFS Exports
-  command: exportfs -ar
+- name: Ensure we save the external NFS server
+  set_fact:
+    openshift_cfme_nfs_server: "{{ openshift_cfme_storage_nfs_external_hostname }}"
   when:
-    - cfme_exports_created | changed
+    - openshift_cfme_storage_class == "nfs_external"
+
+- name: Failed NFS server detection
+  assert:
+    that:
+      - openshift_cfme_nfs_server is defined
+    msg: |
+      "Unable to detect an NFS server. The 'nfs_external'
+      openshift_cfme_storage_class option requires that you set
+      openshift_cfme_storage_nfs_external_hostname. NFS hosts detected
+      for local nfs services: {{ groups['oo_nfs_to_config'] | join(', ') }}"
+
+- name: Setting up NFS storage
+  block:
+    - name: Ensure openshift facts are available
+      include_role:
+        name: openshift_facts
+
+    - name: Ensure hosted facts are available
+      include_role:
+        name: openshift_hosted_facts
+
+    - name: wtf facts
+      debug:
+        var: openshift.hosted
+
+    - name: Ensure NFS services are configured
+      include_role:
+        name: openshift_storage_nfs
+
+    - name: Note Storage Type - NFS
+      debug:
+        msg: Setting up NFS storage, openshift_cfme_storage_class is 'nfs'
+
+    - name: Note available NFS servers
+      debug:
+        msg: "Known NFS servers from oo_nfs_to_config: {{ groups['oo_nfs_to_config'] | join(', ') }}"
+
+    # TODO: I was going to try to apply the openshift_storage_nfs role to
+    # handle this, however, that role is not written to be used by
+    # itself. Attempting to use it to create CFME exports would just add
+    # more hard-coded values to the role. That said, we're doing this here
+    # manually for now until some one comes up with a better solution, or
+    # the role is made to accept parameters in a more functional way.
+    #
+    # I can't really even include the openshift_storage_nfs role in here
+    # to do basic setup stuff because it would just result in a lot of
+    # unwanted exports getting set up for the users.
+
+    - name: Ensure the base NFS exports directory exists
+      file:
+        path: "{{ openshift_cfme_storage_nfs_base_dir }}"
+        state: directory
+        mode: 0755
+        owner: root
+        group: root
+
+    - name: Ensure exports drop-directory directory exists
+      file:
+        path: /etc/exports.d/
+        state: directory
+
+    - name: Ensure the correct CFME exports file exists
+      template:
+        src: "openshift_cfme-{{ openshift_cfme_app_template }}.exports.j2"
+        dest: "/etc/exports.d/cfme.exports"
+      register: cfme_exports_created
+
+    - name: Ensure CFME App NFS export directory exists
+      file:
+        path: "{{ openshift_cfme_storage_nfs_base_dir }}/miq-app"
+        state: directory
+        mode: 0777
+        owner: nfsnobody
+        group: nfsnobody
+
+    # Only when using podified DB template
+    - name: Ensure CFME DB NFS export directory exists
+      file:
+        path: "{{ openshift_cfme_storage_nfs_base_dir }}/miq-db"
+        state: directory
+        mode: 0777
+        owner: nfsnobody
+        group: nfsnobody
+      when:
+        - openshift_cfme_app_template == 'miq-template'
+
+    - name: Enable and start NFS services
+      systemd:
+        name: nfs-server
+        state: started
+        enabled: yes
+
+    - name: OpenShift-CFME Reload NFS Exports
+      command: exportfs -ar
+      when:
+        - cfme_exports_created | changed
+
+  delegate_to: "{{ openshift_cfme_nfs_server }}"
