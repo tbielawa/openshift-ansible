@@ -53,7 +53,7 @@
 
 # For local/external NFS backed installations
 - name: "Create the required App and DB PVs using {{ openshift_cfme_storage_class }}"
-  include: storage/create_pvs.yml
+  include: storage/create_nfs_pvs.yml
   when:
     - openshift_cfme_storage_class in ['nfs', 'nfs_external']
 
