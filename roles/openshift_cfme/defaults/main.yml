@@ -95,84 +95,10 @@ openshift_cfme_app_pv_size: 5Gi
 openshift_cfme_db_pv_size: 15Gi
 
 ######################################################################
-# VARIOUS CONSTANTS - DO NOT OVERRIDE THESE UNDER ANY CIRCUMSTANCES
-######################################################################
-# Misc enumerated values
-#---------------------------------------------------------------------
-# Allowed choices for the storage class parameter
-__openshift_cfme_storage_classes:
-  - nfs
-  - nfs_external
-  - preconfigured
-  - cloudprovider
-# Name of the application templates with object/parameter definitions
-__openshift_cfme_app_templates:
-  - miq-template-ext-db
-  - miq-template
-# PostgreSQL database connection parameters
-__openshift_cfme_db_parameters:
-  - DATABASE_USER
-  - DATABASE_PASSWORD
-  - DATABASE_IP
-  - DATABASE_PORT
-  - DATABASE_NAME
-
-
-######################################################################
-# ACCOUNTING
-######################################################################
-# Service Account SSCs
-__openshift_system_account_sccs:
-  - name: miq-anyuid
-    resource_name: anyuid
-  - name: miq-orchestrator
-    resource_name: anyuid
-  - name: miq-privileged
-    resource_name: privileged
-  - name: miq-httpd
-    resource_name: miq-httpd
-  - name: miq-httpd
-    resource_name: anyuid
-
-# Service Account Roles
-__openshift_cfme_system_account_roles:
-  - name: miq-orchestrator
-    resource_name: view
-  - name: miq-orchestrator
-    resource_name: edit
-
-######################################################################
-# DEFAULTS
-######################################################################
-# User only has to provide parameters they need to override, we will
-# do a hash update method with the provided user parameters to create
-# the final connection structure.
-__openshift_cfme_default_db_connection_info:
-  DATABASE_USER: 'root'
-  DATABASE_PASSWORD: ''
-  DATABASE_IP: ''
-  DATABASE_PORT: 5432
-  DATABASE_NAME: 'vmdb_production'
-
-######################################################################
-# SCAFFOLDING - These are parameters we pre-seed that a user may or
-# may not set later
-######################################################################
-# A hash of parameters you want to override or set in the
-# miq-template.yaml or miq-template-ext-db.yaml templates. Set this in
-# your inventory file as a simple hash. Acceptable values are defined
-# under the .parameters list in files/miq-template{-ext-db}.yaml
-# Example:
-#
-# openshift_cfme_template_parameters={'APPLICATION_MEM_REQ': '512Mi'}
-openshift_cfme_template_parameters: {}
-
-# TODO: Refactor '_install_app' variable. This is just for testing but
-# maybe in the future it should control the entire yes/no for CFME.
-#
-# Whether or not the manageiq app should be initialized ('oc new-app
+# Whether or not the cfme app should be initialized ('oc new-app
 # --template=manageiq). If False everything UP TO 'new-app' is ran.
 openshift_cfme_install_app: False
+
 # Docker image to pull
 # openshift_cfme_application_img_name: "{{ 'registry.access.redhat.com/cloudforms46/cfme-openshift-app' if openshift_deployment_type == 'openshift-enterprise' else 'docker.io/manageiq/manageiq-pods' }}"
 # openshift_cfme_application_img_tag: "{{ 'latest' if openshift_deployment_type == 'openshift-enterprise' else 'frontend-latest' }}"
