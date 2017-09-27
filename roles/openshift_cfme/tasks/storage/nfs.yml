@@ -26,26 +26,6 @@
 
 - name: Setting up NFS storage
   block:
-    - name: Ensure openshift facts are available
-      include_role:
-        name: openshift_facts
-
-    - name: Ensure hosted facts are available
-      include_role:
-        name: openshift_hosted_facts
-
-    - name: wtf facts
-      debug:
-        var: openshift.hosted
-
-    - name: Ensure NFS services are configured
-      include_role:
-        name: openshift_storage_nfs
-
-    - name: Note Storage Type - NFS
-      debug:
-        msg: Setting up NFS storage, openshift_cfme_storage_class is 'nfs'
-
     - name: Note available NFS servers
       debug:
         msg: "Known NFS servers from oo_nfs_to_config: {{ groups['oo_nfs_to_config'] | join(', ') }}"
