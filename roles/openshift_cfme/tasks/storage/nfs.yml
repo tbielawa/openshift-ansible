@@ -30,6 +30,17 @@
       debug:
         msg: "Known NFS servers from oo_nfs_to_config: {{ groups['oo_nfs_to_config'] | join(', ') }}"
 
+    - name: Ensure NFS setup has facts module available
+      include_role:
+        role: openshift_facts
+
+    - name: Ensure Facts have been gathered for NFS setup
+      openshift_facts:
+
+    - name: Include OpenShift-Ansible NFS setup role
+      include_role:
+        role: openshift_storage_nfs
+
     # TODO: I was going to try to apply the openshift_storage_nfs role to
     # handle this, however, that role is not written to be used by
     # itself. Attempting to use it to create CFME exports would just add
@@ -41,18 +52,18 @@
     # to do basic setup stuff because it would just result in a lot of
     # unwanted exports getting set up for the users.
 
-    - name: Ensure the base NFS exports directory exists
-      file:
-        path: "{{ openshift_cfme_storage_nfs_base_dir }}"
-        state: directory
-        mode: 0755
-        owner: root
-        group: root
+    # - name: Ensure the base NFS exports directory exists
+    #   file:
+    #     path: "{{ openshift_cfme_storage_nfs_base_dir }}"
+    #     state: directory
+    #     mode: 0755
+    #     owner: root
+    #     group: root
 
-    - name: Ensure exports drop-directory directory exists
-      file:
-        path: /etc/exports.d/
-        state: directory
+    # - name: Ensure exports drop-directory directory exists
+    #   file:
+    #     path: /etc/exports.d/
+    #     state: directory
 
     - name: Ensure the correct CFME exports file exists
       template:
@@ -89,5 +100,10 @@
       command: exportfs -ar
       when:
         - cfme_exports_created | changed
+
+    - name: FAILURE
+      fail:
+        msg: We are done here
+
 
   delegate_to: "{{ openshift_cfme_nfs_server }}"
