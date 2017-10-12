@@ -1,13 +1,20 @@
 ---
-# Tasks to statically provision NFS volumes
-# Include if not using dynamic volume provisioning
-- name: Ensure the /exports/ directory exists
-  file:
-    path: /exports/
-    state: directory
-    mode: 0755
-    owner: root
-    group: root
+- name: Include the NFS Setup role tasks
+  include_role:
+    role: openshift_nfs
+    tasks_from: setup
+  vars:
+    l_nfs_base_dir: /exports
+
+# # Tasks to statically provision NFS volumes
+# # Include if not using dynamic volume provisioning
+# - name: Ensure the /exports/ directory exists
+#   file:
+#     path: /exports/
+#     state: directory
+#     mode: 0755
+#     owner: root
+#     group: root
 
 - name: Ensure the prom-pv0X export directories exist
   file:
