@@ -1,43 +1,26 @@
 ---
-- name: Include the NFS Setup role tasks
-  include_role:
-    role: openshift_nfs
-    tasks_from: setup
-  vars:
-    l_nfs_base_dir: /exports
+- name: Setting up NFS storage
+  block:
+    - name: Include the NFS Setup role tasks
+      include_role:
+        role: openshift_nfs
+        tasks_from: setup
+      vars:
+        l_nfs_base_dir: /exports
 
-- name: Ensure the prometheus export directories exist
-  include_role:
-    role: openshift_nfs
-    tasks_from: create_export
-  vars:
-    l_nfs_base_dir: /exports/
-    l_nfs_export_config: openshift_prometheus
-    l_nfs_export_name: "{{ item }}"
-    l_nfs_options: "*(rw,no_root_squash,no_wdelay)"
-  with_items:
-    - "{{ openshift_prometheus_pv_exports }}"
+    - name: Ensure the prometheus exports are created
+      include_role:
+        role: openshift_nfs
+        tasks_from: create_export
+      vars:
+        l_nfs_base_dir: /exports
+        l_nfs_export_config: openshift_prometheus
+        l_nfs_export_name: "{{ item }}"
+        l_nfs_options: "*(rw,no_root_squash,no_wdelay)"
+      with_items:
+        - "{{ openshift_prometheus_pv_exports }}"
 
-# - name: Ensure the prom-pv0X export directories exist
-#   file:
-#     path: "/exports/{{ item }}"
-#     state: directory
-#     mode: 0777
-#     owner: nfsnobody
-#     group: nfsnobody
-#   with_items: "{{ openshift_prometheus_pv_exports }}"
-
-# - name: Ensure the NFS exports for Prometheus PVs exist
-#   copy:
-#     src: openshift_prometheus.exports
-#     dest: /etc/exports.d/openshift_prometheus.exports
-#   register: nfs_exports_updated
-
-# - name: Ensure the NFS export table is refreshed if exports were added
-#   command: exportfs -ar
-#   when:
-#     - nfs_exports_updated.changed
-
+  delegate_to: "{{ openshift_prometheus_nfs_server }}"
 
 ######################################################################
 # Create the required Prometheus PVs. Check out these online docs if you
