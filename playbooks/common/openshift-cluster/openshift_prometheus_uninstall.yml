@@ -1,6 +1,6 @@
 ---
 - name: Create Hosted Resources - openshift_prometheus - Uninstall
-  hosts: oo_first_master
+  hosts: "{{ groups['masters'].0 }}"
   tasks:
     - include_role:
         role: openshift_prometheus

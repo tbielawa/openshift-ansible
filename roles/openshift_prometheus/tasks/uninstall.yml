@@ -13,6 +13,8 @@
 
 - name: Remove the project
   command: "oc delete -n {{ openshift_prometheus_namespace }} project {{ openshift_prometheus_namespace }}"
+  # Ignore them in case the project is already removed
+  ignore_errors: true
 
 - name: Verify project has been destroyed
   command: "oc get project {{ openshift_prometheus_namespace }}"
@@ -21,3 +23,20 @@
   until: project_terminated.stderr.find("NotFound") != -1
   delay: 5
   retries: 30
+
+- name: uninstall harder
+  debug:
+    msg: "Removing export '{{ item }}' from nfs server '{{ openshift_prometheus_nfs_server }}'"
+  with_items: "{{ openshift_prometheus_pv_exports }}"
+  delegate_to: "{{ openshift_prometheus_nfs_server }}"
+
+- include_role:
+    role: openshift_nfs
+    tasks_from: delete_export
+  vars:
+    l_nfs_base_dir: /exports
+    l_nfs_export_config: openshift_prometheus
+    l_nfs_export_name: "{{ item }}"
+    l_nfs_erase_data: "{{ openshift_prometheus_uninstall_harder | default(false) | bool }}"
+  with_items: "{{ openshift_prometheus_pv_exports }}"
+  delegate_to: "{{ openshift_prometheus_nfs_server }}"
